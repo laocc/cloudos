@@ -1,0 +1,20 @@
+{
+  "name": "laocc/cloudos",
+  "description": "aliyun tencent",
+  "homepage": "https://github.com/laocc/cloudos",
+  "authors": [
+    {
+      "name": "fazo",
+      "email": "fazo@qq.com"
+    }
+  ],
+  "require": {
+    "php": ">7.1",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "laocc\\cloudos\\": "src/"
+    }
+  }
+}
