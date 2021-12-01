@@ -48,6 +48,13 @@ class Aliyun
         $ok = openssl_verify($authStr, $authorization, $pubKey, OPENSSL_ALGO_MD5);
         if ($ok == 1) {
             parse_str($body, $post);
+
+            if (isset($config['host'])) {
+                $host = $config['host'] . '/' . $post['filename'];
+            } else {
+                $host = str_replace('https://', "https://{$config['bucket']}.", $config['endpoint']);
+            }
+            $post['url'] = rtrim($host, '/') . '/' . $post['filename'];
             return $post;
         }
 
@@ -79,7 +86,7 @@ class Aliyun
      * @param array $config
      * @return array
      */
-    public function signature(array $config): array
+    public function signature(array $config, array $append = []): array
     {
         $cBody = [
             'bucket' => '${bucket}',
@@ -95,10 +102,15 @@ class Aliyun
             'callbackBody' => urldecode(http_build_query($cBody)),
             'callbackBodyType' => "application/x-www-form-urlencoded"
         );
+        if (!empty($append)) {
+            $var = [];
+            foreach ($append as $k => $v) $var["x:{$k}"] = $v;
+            $callback_param['callback-var'] = json_encode($var, 320);
+        }
         $base64_callback_body = base64_encode(json_encode($callback_param, 320));
         $expire = time() + ($config['ttl'] ?? 60);
 
-        $config['dir'] = '/' . trim($config['dir'], '/') . '/';
+        $config['dir'] = trim($config['dir'], '/') . '/';
 
         $conditions = [];
         //最大文件大小.用户可以自己设置，2个1024=1M
