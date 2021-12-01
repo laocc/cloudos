@@ -96,17 +96,14 @@ class Aliyun
             'mimeType' => '${mimeType}',
             'width' => '${imageInfo.width}',
             'height' => '${imageInfo.height}',
+            'params' => $append,
         ];
         $callback_param = array(
             'callbackUrl' => $config['callback'],
             'callbackBody' => urldecode(http_build_query($cBody)),
-            'callbackBodyType' => "application/x-www-form-urlencoded"
+            'callbackBodyType' => "application/json"
         );
-        if (!empty($append)) {
-            $var = [];
-            foreach ($append as $k => $v) $var["x:{$k}"] = $v;
-            $callback_param['callback-var'] = json_encode($var, 320);
-        }
+        //支持application/x-www-form-urlencoded和application/json
         $base64_callback_body = base64_encode(json_encode($callback_param, 320));
         $expire = time() + ($config['ttl'] ?? 60);
 
