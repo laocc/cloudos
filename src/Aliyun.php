@@ -47,7 +47,8 @@ class Aliyun
         // 6.验证签名
         $ok = openssl_verify($authStr, $authorization, $pubKey, OPENSSL_ALGO_MD5);
         if ($ok == 1) {
-            parse_str($body, $post);
+//            parse_str($body, $post);
+            $post = json_decode($body, true);
 
             if (isset($config['host'])) {
                 $host = $config['host'] . '/' . $post['filename'];
@@ -100,7 +101,7 @@ class Aliyun
         ];
         $callback_param = array(
             'callbackUrl' => $config['callback'],
-            'callbackBody' => urldecode(http_build_query($cBody)),
+            'callbackBody' => preg_replace('/\"(\$\{\w+\})\"/', '\1', json_encode($cBody, 320)),
             'callbackBodyType' => "application/json"
         );
         //支持application/x-www-form-urlencoded和application/json
