@@ -148,7 +148,7 @@ class Aliyun
     {
         try {
             $ossClient = new OssClient($conf['id'], $conf['secret'], $conf['endpoint']);
-            return $ossClient->uploadFile($conf['bucket'], $file['name'], $file['path']);
+            return $ossClient->uploadFile($conf['bucket'], ltrim($file['name'], '/'), $file['path']);
 
         } catch (OssException $e) {
             return $e->getMessage();
@@ -160,7 +160,7 @@ class Aliyun
     {
         try {
             $ossClient = new OssClient($conf['id'], $conf['secret'], $conf['endpoint']);
-            return $ossClient->deleteObject($conf['bucket'], $file);
+            return $ossClient->deleteObject($conf['bucket'], ltrim($file, '/'));
 
         } catch (OssException $e) {
             return $e->getMessage();
