@@ -12,7 +12,6 @@ class Aliyun
      * https://help.aliyun.com/document_detail/91771.htm?spm=a2c4g.11186623.2.12.79477d9cF4fx2C#concept-nhs-ldt-2fb
      *
      */
-
     public function callback(array $config)
     {
         // 1.获取OSS的签名header和公钥url header
@@ -84,7 +83,10 @@ class Aliyun
      */
 
     /**
+     * web页面中直传OSS时，先请求签名，见demo中示例
+     *
      * @param array $config
+     * @param array $append
      * @return array
      */
     public function signature(array $config, array $append = []): array
@@ -147,6 +149,18 @@ class Aliyun
         try {
             $ossClient = new OssClient($conf['id'], $conf['secret'], $conf['endpoint']);
             return $ossClient->uploadFile($conf['bucket'], $file['name'], $file['path']);
+
+        } catch (OssException $e) {
+            return $e->getMessage();
+        }
+    }
+
+
+    public function delete(array $conf, string $file)
+    {
+        try {
+            $ossClient = new OssClient($conf['id'], $conf['secret'], $conf['endpoint']);
+            return $ossClient->deleteObject($conf['bucket'], $file);
 
         } catch (OssException $e) {
             return $e->getMessage();
