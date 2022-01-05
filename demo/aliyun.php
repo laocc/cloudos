@@ -9,7 +9,7 @@ function aliyunPost()
         'secret' => '****',
         'endpoint' => '****',
     ];
-    $config['callback'] = 'http://api.seek.wuhudabai.cn/oss/aliyun/';
+    $config['callback'] = 'https://api.domain.cn/oss/aliyun/';
     $config['ttl'] = 60;
     $config['dir'] = 'face';
     $config['bucket'] = 'bucket';
