@@ -156,15 +156,16 @@ class Aliyun
     /**
      * 上传文件
      *
-     * @param string $savePathName 含要保存的name文件名
-     * @param string $tempFile 本地文件path路径
+     * @param string $bucket
+     * @param string $savePathName
+     * @param string $tempFile
      * @return string|null
      */
-    public function upload(string $savePathName, string $tempFile)
+    public function upload(string $bucket, string $savePathName, string $tempFile)
     {
         try {
             $ossClient = new OssClient($this->conf['id'], $this->conf['secret'], $this->conf['endpoint']);
-            return $ossClient->uploadFile($this->conf['bucket'], ltrim($savePathName, '/'), $tempFile);
+            return $ossClient->uploadFile($bucket, ltrim($savePathName, '/'), $tempFile);
 
         } catch (OssException $e) {
             return $e->getMessage();
@@ -172,20 +173,19 @@ class Aliyun
     }
 
     /**
-     * 保存文本为文件
+     * 保存文本为文件 https://help.aliyun.com/document_detail/88473.html
      *
-     * https://help.aliyun.com/document_detail/88473.html
-     *
+     * @param string $bucket
      * @param string $savePathName
      * @param string $content
      * @param array|null $option
      * @return string|null
      */
-    public function save(string $savePathName, string $content, array $option = null)
+    public function save(string $bucket, string $savePathName, string $content, array $option = null)
     {
         try {
             $ossClient = new OssClient($this->conf['id'], $this->conf['secret'], $this->conf['endpoint']);
-            return $ossClient->putObject($this->conf['bucket'], ltrim($savePathName, '/'), $content, $option);
+            return $ossClient->putObject($bucket, ltrim($savePathName, '/'), $content, $option);
 
         } catch (OssException $e) {
             return $e->getMessage();
@@ -196,14 +196,15 @@ class Aliyun
     /**
      * 删除文件
      *
+     * @param string $bucket
      * @param string $filePathName
      * @return string|null
      */
-    public function delete(string $filePathName)
+    public function delete(string $bucket, string $filePathName)
     {
         try {
             $ossClient = new OssClient($this->conf['id'], $this->conf['secret'], $this->conf['endpoint']);
-            return $ossClient->deleteObject($this->conf['bucket'], ltrim($filePathName, '/'));
+            return $ossClient->deleteObject($bucket, ltrim($filePathName, '/'));
 
         } catch (OssException $e) {
             return $e->getMessage();
@@ -213,14 +214,15 @@ class Aliyun
     /**
      * 读取文件
      *
+     * @param string $bucket
      * @param string $filePathName
      * @return string
      */
-    public function read(string $filePathName)
+    public function read(string $bucket, string $filePathName)
     {
         try {
             $ossClient = new OssClient($this->conf['id'], $this->conf['secret'], $this->conf['endpoint']);
-            return $ossClient->getObject($this->conf['bucket'], ltrim($filePathName, '/'));
+            return $ossClient->getObject($bucket, ltrim($filePathName, '/'));
 
         } catch (OssException $e) {
             return $e->getMessage();
