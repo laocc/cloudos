@@ -7,13 +7,21 @@ use OSS\OssClient;
 
 class Aliyun
 {
+    private $conf;
+
+    public function __construct(array $conf = null)
+    {
+        $this->conf = $conf;
+    }
+
     /**
      * 文档：
      * https://help.aliyun.com/document_detail/91771.htm?spm=a2c4g.11186623.2.12.79477d9cF4fx2C#concept-nhs-ldt-2fb
      *
      */
-    public function callback(array $config)
+    public function callback()
     {
+        $conf = $this->conf;
         // 1.获取OSS的签名header和公钥url header
         $authorizationBase64 = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         $pubKeyUrlBase64 = $_SERVER['HTTP_X_OSS_PUB_KEY_URL'] ?? '';
@@ -49,10 +57,10 @@ class Aliyun
 //            parse_str($body, $post);
             $post = json_decode($body, true);
 
-            if (isset($config['host'])) {
-                $host = $config['host'] . '/' . $post['filename'];
+            if (isset($conf['host'])) {
+                $host = $conf['host'] . '/' . $post['filename'];
             } else {
-                $host = str_replace('https://', "https://{$config['bucket']}.", $config['endpoint']);
+                $host = str_replace('https://', "https://{$conf['bucket']}.", $conf['endpoint']);
             }
             $post['url'] = rtrim($host, '/') . '/' . $post['filename'];
             return $post;
@@ -85,12 +93,13 @@ class Aliyun
     /**
      * web页面中直传OSS时，先请求签名，见demo中示例
      *
-     * @param array $config
      * @param array $append
      * @return array
      */
-    public function signature(array $config, array $append = []): array
+    public function signature(array $append = []): array
     {
+        $conf = $this->conf;
+
         $cBody = [
             'bucket' => '${bucket}',
             'etag' => '${etag}',
@@ -102,15 +111,15 @@ class Aliyun
             'params' => $append,
         ];
         $callback_param = array(
-            'callbackUrl' => $config['callback'],
+            'callbackUrl' => $conf['callback'],
             'callbackBody' => preg_replace('/\"(\$\{\w+\})\"/', '\1', json_encode($cBody, 320)),
             'callbackBodyType' => "application/json"
         );
         //支持application/x-www-form-urlencoded和application/json
         $base64_callback_body = base64_encode(json_encode($callback_param, 320));
-        $expire = time() + ($config['ttl'] ?? 60);
+        $expire = time() + ($conf['ttl'] ?? 60);
 
-        $config['dir'] = trim($config['dir'], '/') . '/';
+        $conf['dir'] = trim($conf['dir'], '/') . '/';
 
         $conditions = [];
         //最大文件大小.用户可以自己设置，2个1024=1M
@@ -118,8 +127,8 @@ class Aliyun
 
         // 表示用户上传的数据，必须是以$dir开始，不然上传会失败，这一步不是必须项，
         //只是为了安全起见，防止用户通过policy上传到别人的目录。
-        if ($config['force'] ?? 0) {
-            $conditions[] = ['starts-with', '$key', $config['dir']];
+        if ($conf['force'] ?? 0) {
+            $conditions[] = ['starts-with', '$key', $conf['dir']];
         }
 
         $arr = array(
@@ -127,35 +136,35 @@ class Aliyun
             'conditions' => $conditions
         );
         $base64_policy = base64_encode(json_encode($arr));
-        $signature = base64_encode(hash_hmac('sha1', $base64_policy, $config['secret'], true));
+        $signature = base64_encode(hash_hmac('sha1', $base64_policy, $conf['secret'], true));
 
         $response = array();
-        $response['accessid'] = $config['id'];
-        if (isset($config['host'])) {
-            $response['host'] = $config['host'];
+        $response['accessid'] = $conf['id'];
+        if (isset($conf['host'])) {
+            $response['host'] = $conf['host'];
         } else {
-            $response['host'] = str_replace('https://', "https://{$config['bucket']}.", $config['endpoint']);
+            $response['host'] = str_replace('https://', "https://{$conf['bucket']}.", $conf['endpoint']);
         }
         $response['policy'] = $base64_policy;
         $response['signature'] = $signature;
         $response['expire'] = $expire;
         $response['callback'] = $base64_callback_body;
-        $response['dir'] = $config['dir'];  // 这个参数是设置用户上传文件时指定的前缀。
+        $response['dir'] = $conf['dir'];  // 这个参数是设置用户上传文件时指定的前缀。
         return $response;
     }
 
     /**
      * 上传文件
      *
-     * @param array $conf OSS配置
-     * @param array $file 文件对象，含要保存的name文件名，本地文件path路径
+     * @param string $savePathName 含要保存的name文件名
+     * @param string $tempFile 本地文件path路径
      * @return string|null
      */
-    public function upload(array $conf, array $file)
+    public function upload(string $savePathName, string $tempFile)
     {
         try {
-            $ossClient = new OssClient($conf['id'], $conf['secret'], $conf['endpoint']);
-            return $ossClient->uploadFile($conf['bucket'], ltrim($file['name'], '/'), $file['path']);
+            $ossClient = new OssClient($this->conf['id'], $this->conf['secret'], $this->conf['endpoint']);
+            return $ossClient->uploadFile($this->conf['bucket'], ltrim($savePathName, '/'), $tempFile);
 
         } catch (OssException $e) {
             return $e->getMessage();
@@ -165,17 +174,18 @@ class Aliyun
     /**
      * 保存文本为文件
      *
-     * @param array $conf OSS配置
-     * @param array $file 含要保存的name文件名，文本内容content，附加配置如header
      * https://help.aliyun.com/document_detail/88473.html
      *
+     * @param string $savePathName
+     * @param string $content
+     * @param array|null $option
      * @return string|null
      */
-    public function save(array $conf, array $file)
+    public function save(string $savePathName, string $content, array $option = null)
     {
         try {
-            $ossClient = new OssClient($conf['id'], $conf['secret'], $conf['endpoint']);
-            return $ossClient->putObject($conf['bucket'], ltrim($file['name'], '/'), $file['content'], $file['option'] ?? null);
+            $ossClient = new OssClient($this->conf['id'], $this->conf['secret'], $this->conf['endpoint']);
+            return $ossClient->putObject($this->conf['bucket'], ltrim($savePathName, '/'), $content, $option);
 
         } catch (OssException $e) {
             return $e->getMessage();
@@ -186,15 +196,14 @@ class Aliyun
     /**
      * 删除文件
      *
-     * @param array $conf
-     * @param string $file
+     * @param string $filePathName
      * @return string|null
      */
-    public function delete(array $conf, string $file)
+    public function delete(string $filePathName)
     {
         try {
-            $ossClient = new OssClient($conf['id'], $conf['secret'], $conf['endpoint']);
-            return $ossClient->deleteObject($conf['bucket'], ltrim($file, '/'));
+            $ossClient = new OssClient($this->conf['id'], $this->conf['secret'], $this->conf['endpoint']);
+            return $ossClient->deleteObject($this->conf['bucket'], ltrim($filePathName, '/'));
 
         } catch (OssException $e) {
             return $e->getMessage();
@@ -204,15 +213,14 @@ class Aliyun
     /**
      * 读取文件
      *
-     * @param array $conf
-     * @param string $file
+     * @param string $filePathName
      * @return string
      */
-    public function read(array $conf, string $file)
+    public function read(string $filePathName)
     {
         try {
-            $ossClient = new OssClient($conf['id'], $conf['secret'], $conf['endpoint']);
-            return $ossClient->getObject($conf['bucket'], ltrim($file, '/'));
+            $ossClient = new OssClient($this->conf['id'], $this->conf['secret'], $this->conf['endpoint']);
+            return $ossClient->getObject($this->conf['bucket'], ltrim($filePathName, '/'));
 
         } catch (OssException $e) {
             return $e->getMessage();
