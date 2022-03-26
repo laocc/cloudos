@@ -212,7 +212,7 @@ class Aliyun
     }
 
     /**
-     * 读取文件
+     * 读取文件，一般用于读取文本文件
      *
      * @param string $bucket
      * @param string $filePathName
@@ -222,7 +222,9 @@ class Aliyun
     {
         try {
             $ossClient = new OssClient($this->conf['id'], $this->conf['secret'], $this->conf['endpoint']);
-            return $ossClient->getObject($bucket, ltrim($filePathName, '/'));
+            $file = $ossClient->getObject($bucket, ltrim($filePathName, '/'));
+            if (strpos($file, 'specified key does not exist') > 0) $file = '';
+            return $file;
 
         } catch (OssException $e) {
             return $e->getMessage();
