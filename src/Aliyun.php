@@ -167,4 +167,15 @@ class Aliyun
         }
     }
 
+    public function read(array $conf, string $file)
+    {
+        try {
+            $ossClient = new OssClient($conf['id'], $conf['secret'], $conf['endpoint']);
+            return $ossClient->getObject($conf['bucket'], ltrim($file, '/'));
+
+        } catch (OssException $e) {
+            return $e->getMessage();
+        }
+    }
+
 }
