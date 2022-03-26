@@ -144,6 +144,13 @@ class Aliyun
         return $response;
     }
 
+    /**
+     * 上传文件
+     *
+     * @param array $conf OSS配置
+     * @param array $file 文件对象，含要保存的name文件名，本地文件path路径
+     * @return string|null
+     */
     public function upload(array $conf, array $file)
     {
         try {
@@ -155,7 +162,34 @@ class Aliyun
         }
     }
 
+    /**
+     * 保存文本为文件
+     *
+     * @param array $conf OSS配置
+     * @param array $file 含要保存的name文件名，文本内容content，附加配置如header
+     * https://help.aliyun.com/document_detail/88473.html
+     *
+     * @return string|null
+     */
+    public function save(array $conf, array $file)
+    {
+        try {
+            $ossClient = new OssClient($conf['id'], $conf['secret'], $conf['endpoint']);
+            return $ossClient->putObject($conf['bucket'], ltrim($file['name'], '/'), $file['content'], $file['option'] ?? null);
 
+        } catch (OssException $e) {
+            return $e->getMessage();
+        }
+    }
+
+
+    /**
+     * 删除文件
+     *
+     * @param array $conf
+     * @param string $file
+     * @return string|null
+     */
     public function delete(array $conf, string $file)
     {
         try {
@@ -167,6 +201,13 @@ class Aliyun
         }
     }
 
+    /**
+     * 读取文件
+     *
+     * @param array $conf
+     * @param string $file
+     * @return string
+     */
     public function read(array $conf, string $file)
     {
         try {
