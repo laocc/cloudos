@@ -58,7 +58,7 @@ class Aliyun
             $post = json_decode($body, true);
 
             if (isset($conf['host'])) {
-                $host = $conf['host'] . '/' . $post['filename'];
+                $host = $conf['host'];
             } else {
                 $host = str_replace('https://', "https://{$conf['bucket']}.", $conf['endpoint']);
             }
