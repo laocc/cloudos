@@ -9,7 +9,7 @@
     }
   ],
   "require": {
-    "aliyuncs/oss-sdk-php": "^2.4",
+    "aliyuncs/oss-sdk-php": "v2.6.0",
     "php": ">7.1",
     "ext-json": "*"
   },

@@ -7,7 +7,7 @@ use OSS\OssClient;
 
 class Aliyun
 {
-    private $conf;
+    private array $conf;
 
     public function __construct(array $conf = null)
     {
