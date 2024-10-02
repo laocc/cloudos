@@ -4,6 +4,7 @@ namespace laocc\cloudos;
 
 use OSS\Core\OssException;
 use OSS\OssClient;
+use function esp\helper\mime_ext;
 
 class Aliyun
 {
@@ -137,9 +138,13 @@ class Aliyun
         );
         $base64_policy = base64_encode(json_encode($arr));
         $signature = base64_encode(hash_hmac('sha1', $base64_policy, $conf['secret'], true));
+        $rand = date('YmdHis') . mt_rand(1000, 9999);
 
         $response = array();
         $response['accessid'] = $conf['id'];
+        $response['extension'] = mime_ext($conf['mime']);
+        $response['filename'] = "{$conf['dir']}{$rand}.{$response['extension']}";
+
         if (isset($conf['host'])) {
             $response['host'] = $conf['host'];
         } else {
