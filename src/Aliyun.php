@@ -55,14 +55,8 @@ class Aliyun
         // 6.验证签名
         $ok = openssl_verify($authStr, $authorization, $pubKey, OPENSSL_ALGO_MD5);
         if ($ok == 1) {
-//            parse_str($body, $post);
             $post = json_decode($body, true);
-
-            if (isset($conf['host'])) {
-                $host = $conf['host'];
-            } else {
-                $host = str_replace('https://', "https://{$conf['bucket']}.", $conf['endpoint']);
-            }
+            $host = $conf['host'] ?? $conf['domain'];
             $post['url'] = rtrim($host, '/') . '/' . $post['filename'];
             return $post;
         }
@@ -145,11 +139,9 @@ class Aliyun
         $response['extension'] = mime_ext($conf['mime']);
         $response['filename'] = "{$conf['dir']}{$rand}.{$response['extension']}";
 
-        if (isset($conf['host'])) {
-            $response['host'] = $conf['host'];
-        } else {
-            $response['host'] = str_replace('https://', "https://{$conf['bucket']}.", $conf['endpoint']);
-        }
+        if (isset($conf['host'])) $response['host'] = $conf['host'];
+        else if (isset($conf['domain'])) $response['host'] = $conf['domain'];
+
         $response['policy'] = $base64_policy;
         $response['signature'] = $signature;
         $response['expire'] = $expire;
