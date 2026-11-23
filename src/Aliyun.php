@@ -10,7 +10,7 @@ class Aliyun
 {
     private array $conf;
 
-    public function __construct(array $conf = null)
+    public function __construct(?array $conf = null)
     {
         $this->conf = $conf;
     }
@@ -178,7 +178,7 @@ class Aliyun
      * @param array|null $option
      * @return string|null
      */
-    public function save(string $bucket, string $savePathName, string $content, array $option = null)
+    public function save(string $bucket, string $savePathName, string $content, ?array $option = null)
     {
         try {
             $ossClient = new OssClient($this->conf['id'], $this->conf['secret'], $this->conf['endpoint']);
